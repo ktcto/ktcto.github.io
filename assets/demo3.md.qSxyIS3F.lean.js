@@ -1,0 +1,1 @@
+import{_ as i,c as a,o as n,ae as h}from"./chunks/framework.Cd-3tpCq.js";const g=JSON.parse('{"title":"demo3","description":"","frontmatter":{"outline":"deep"},"headers":[],"relativePath":"demo3.md","filePath":"demo3.md"}'),k={name:"demo3.md"};function t(l,s,p,e,E,r){return n(),a("div",null,s[0]||(s[0]=[h("",10)]))}const y=i(k,[["render",t]]);export{g as __pageData,y as default};
