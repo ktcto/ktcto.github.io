@@ -106,5 +106,6 @@ compileKotlin
 #.vitepress
 !.vitepress/config.mts
 
-docs/.vitepress/*
-!docs/.vitepress/config.mts
+# 下面两行导致github action无法部署pages到docs/.vitepress/dist/
+# docs/.vitepress/*
+# !docs/.vitepress/config.mts
