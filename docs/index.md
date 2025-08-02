@@ -3,8 +3,8 @@
 layout: home
 
 hero:
-  name: "My Awesome Project2 .NET 10"
-  text: "A VitePress Site2"
+  name: "Awesome .NET 10"
+  text: "A VitePress Site"
   tagline: My great project tagline
   actions:
     - theme: brand
@@ -15,7 +15,7 @@ hero:
       link: /api-examples
 
 features:
-  - title: Feature 测试2
+  - title: Feature 测试5
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
   - title: Feature B
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
