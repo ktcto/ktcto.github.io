@@ -1,0 +1,110 @@
+﻿
+# 从git排除文件缓存 git rm --cached  *.exe
+# 从git排除目录缓存 git rm -r --cached .
+.vs
+#  .idea
+#  .vscode
+*.testlog
+
+BenchmarkDotNet.Artifacts/
+*.exp
+*.lib
+
+# User-specific files
+*.rsuser
+*.suo
+.suo
+
+**/[Pp]ackages/*
+
+*.user
+
+*.userosscache
+*.sln.docstates
+
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+  
+
+# MSTest Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUNIT
+*.VisualState.xml
+TestResult.xml
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# StyleCop
+StyleCopReport.xml
+
+# MSBuild Binary and Structured Log
+
+*.binlog
+
+# Local History for Visual Studio
+
+.localhistory/
+
+
+[Ll]og/
+
+.vs/
+
+#不签入target目录、.exe、.pdb
+target
+*.exe
+*.pdb
+*.class
+*.obj
+
+
+#不签入仓颉.cache目录
+.cache
+
+.zig-cache
+zig-out
+
+#不签入node_modules目录
+node_modules
+
+compileTestKotlin
+compileKotlin
+.gradle
+
+# 【注意】build/classes不行，必须下面这样
+**/build/classes/*
+
+# # git排除所有目录中  除了.php后缀名的 其它所有文件
+# #  排除所有文件
+# *
+# #  但不排除目录
+# !*/
+# #  签入所有.gitignore .php、.ini launch.json文件
+# !*.gitignore
+# !*.php
+# !*.ini
+# !launch.json
+# !app/
+# !general/
+
+
+#vuepress
+.cache/
+.temp/
+
+#vitepress
+#【注意】签入配置文件config.mts必须.vitepress/* 不能用.vitepress/ 或 .vitepress
+#并且.vitepress/*左边不能有空格
+.vitepress/*
+#.vitepress
+!.vitepress/config.mts
+
+docs/.vitepress/*
+!docs/.vitepress/config.mts
