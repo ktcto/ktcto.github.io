@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "My Awesome Project2 v5"
+  name: "My Awesome Project2 .NET 10"
   text: "A VitePress Site2"
   tagline: My great project tagline
   actions:
