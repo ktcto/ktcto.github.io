@@ -15,7 +15,7 @@ hero:
       link: /api-examples
 
 features:
-  - title: Feature 测试5
+  - title: Feature 测试1
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
   - title: Feature B
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
