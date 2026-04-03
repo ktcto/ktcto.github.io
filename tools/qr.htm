@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H5扫描识别二维码内容https://github.com/mebjas/html5-qrcode</title>
+    <script src="js/html5-qrcode2.3.8.min.js"></script>
+    <style>
+        @media (max-width: 768px) {
+
+            /* 长宽必须100% 才能让扫描镜头边角正方形 */
+            #reader {
+                /* max-width: 500px; */
+                width: 100%;
+                height: 100%;
+                margin: 5px 0px 10px 0;
+                border-radius: 5px;
+                background-color: #f8f9fa;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 1.1rem;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .scanner-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            .scan-line {
+                position: absolute;
+                height: 2px;
+                width: 100%;
+                background: linear-gradient(to right, transparent, #4a00e0, transparent);
+                animation: scan 2s linear infinite;
+            }
+
+            @keyframes scan {
+                0% {
+                    top: 20%;
+                }
+
+                50% {
+                    top: 80%;
+                }
+
+                100% {
+                    top: 20%;
+                }
+            }
+
+            .camera-selector {
+                margin: 10px 0;
+                display: flex;
+                /* justify-content: center;
+            align-items: center; */
+                gap: 10px;
+            }
+
+            /* select {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 0.9rem;
+        } */
+
+            .result-section {
+                background-color: #f8f9fa;
+                border-radius: 10px;
+                padding: 20px;
+                margin-top: 20px;
+            }
+
+            .result-section h3 {
+                color: #4a00e0;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            #result {
+                background-color: white;
+                padding: 10px;
+                border-radius: 5px;
+                min-height: 60px;
+                border-left: 2px solid #4a00e0;
+                word-break: break-all;
+            }
+
+            .status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                /* margin-top: 15px; */
+                color: #6c757d;
+            }
+
+            .status-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background-color: #6c757d;
+            }
+
+            .active .status-dot {
+                background-color: #4CAF50;
+                animation: pulse 1.5s infinite;
+            }
+
+            @keyframes pulse {
+                0% {
+                    transform: scale(0.95);
+                    opacity: 0.7;
+                }
+
+                50% {
+                    transform: scale(1.1);
+                    opacity: 1;
+                }
+
+                100% {
+                    transform: scale(0.95);
+                    opacity: 0.7;
+                }
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            button {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            /* 长宽必须100% 才能让扫描镜头边角正方形 */
+            #reader {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanner-section">
+
+        <div class="camera-selector">
+            <select id="camera-select">
+                <option value="">自动选择后置摄像头</option>
+            </select>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="status-text">准备就绪</span>
+            </div>
+        </div>
+
+        <div id="reader">
+            <div class="scanner-overlay">
+                <div class="scan-line"></div>
+            </div>
+        </div>
+
+        <input type="button" style="color: green;" id="scan-button" value="开始扫描">
+        <input type="button" style="margin:auto 10px" id="stop-button" value="停止扫描">
+        <input type="button" id="switch-camera" value="切换摄像头">
+
+    </div>
+
+    <textarea id="result" style="width: 90%;margin-top:10px;">等待扫描...</textarea>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const scanButton = document.getElementById('scan-button');
+            const stopButton = document.getElementById('stop-button');
+            const switchCameraButton = document.getElementById('switch-camera');
+            const cameraSelect = document.getElementById('camera-select');
+            const resultElement = document.getElementById('result');
+            const statusElement = document.getElementById('status-text');
+            const statusDot = document.querySelector('.status-dot');
+            const statusContainer = document.querySelector('.status');
+
+            let html5QrcodeScanner;
+            let isScanning = false;
+            let cameras = [];
+            let currentCameraIndex = -1;
+            /** 防止同一帧/连帧内 onScanSuccess 重复触发导致多次弹窗 */
+            let scanSuccessHandled = false;
+
+            // 初始化扫描器
+            function initScanner() {
+                //html5QrcodeScanner = new Html5Qrcode("reader", { fps: 10, qrbox: 300 });//【Fail】
+                html5QrcodeScanner = new Html5Qrcode("reader");//【ok】
+
+                // 获取可用摄像头列表
+                Html5Qrcode.getCameras().then(availableCameras => {
+                    cameras = availableCameras;
+                    populateCameraSelect(cameras);
+
+                    // 尝试自动选择后置摄像头
+                    autoSelectRearCamera(cameras);
+                }).catch(err => {
+                    console.error("无法获取摄像头列表:", err);
+                    cameraSelect.innerHTML = '<option value="">无法获取摄像头</option>';
+                });
+            }
+
+            // 填充摄像头选择下拉菜单
+            function populateCameraSelect(cameras) {
+                cameraSelect.innerHTML = '';
+
+                if (cameras && cameras.length) {
+                    cameras.forEach((camera, index) => {
+                        const option = document.createElement('option');
+                        option.value = camera.id;
+                        option.text = camera.label || `摄像头 ${index + 1}`;
+                        cameraSelect.appendChild(option);
+                    });
+
+                    // 默认选择第一个摄像头
+                    if (currentCameraIndex === -1) {
+                        currentCameraIndex = 0;
+                        cameraSelect.selectedIndex = 0;
+                    }
+                } else {
+                    cameraSelect.innerHTML = '<option value="">未找到摄像头</option>';
+                }
+            }
+
+            // 自动选择后置摄像头
+            function autoSelectRearCamera(cameras) {
+                if (!cameras || cameras.length === 0) return;
+
+                // 尝试找到后置摄像头
+                let rearCameraIndex = -1;
+
+                // 策略1: 查找包含"back"或"rear"标签的摄像头
+                for (let i = 0; i < cameras.length; i++) {
+                    const label = cameras[i].label.toLowerCase();
+                    if (label.includes('back') || label.includes('rear') ||
+                        label.includes('environment') || label.includes('world')) {
+                        rearCameraIndex = i;
+                        break;
+                    }
+                }
+
+                // 策略2: 如果没有明确的后置摄像头，选择第二个摄像头(通常是后置)
+                if (rearCameraIndex === -1 && cameras.length > 1) {
+                    rearCameraIndex = 1;
+                }
+
+                // 策略3: 如果只有一个摄像头，使用它
+                if (rearCameraIndex === -1 && cameras.length === 1) {
+                    rearCameraIndex = 0;
+                }
+
+                if (rearCameraIndex !== -1) {
+                    currentCameraIndex = rearCameraIndex;
+                    cameraSelect.selectedIndex = rearCameraIndex;
+                    //statusElement.textContent = "默认后置摄像头";
+                    statusElement.textContent = "";
+                }
+            }
+
+            // 开始扫描
+            scanButton.addEventListener('click', function () {
+                if (isScanning) return;
+
+                if (cameras.length === 0) {
+                    resultElement.textContent = "未找到可用的摄像头";
+                    return;
+                }
+                const cameraId = cameras[currentCameraIndex].id;
+
+                html5QrcodeScanner.start(
+                    cameraId,
+                    {
+                        fps: 10
+                        , qrbox: 300
+                        //fps: 10,
+                        //qrbox: { width: 350, height: 350 }
+                    },
+                    onScanSuccess,
+                    onScanFailure
+                ).then(() => {
+                    isScanning = true;
+                    scanSuccessHandled = false;
+                    updateStatus('正在扫描...', true);
+                }).catch(err => {
+                    console.error("启动扫描失败:", err);
+                    resultElement.textContent = "无法启动摄像头，请检查权限设置";
+                    updateStatus('启动失败', false);
+                });
+            });
+
+            // 停止扫描
+            stopButton.addEventListener('click', function () {
+                if (!isScanning) return;
+
+                html5QrcodeScanner.stop().then(() => {
+                    isScanning = false;
+                    scanSuccessHandled = false;
+                    updateStatus('已停止', false);
+                    resultElement.textContent = "扫描已停止";
+                }).catch(err => {
+                    console.error("停止扫描失败:", err);
+                });
+            });
+
+            // 切换摄像头
+            switchCameraButton.addEventListener('click', function () {
+                if (cameras.length <= 1) {
+                    resultElement.textContent = "只有一个摄像头可用，无法切换";
+                    return;
+                }
+
+                if (isScanning) {
+                    // 如果正在扫描，先停止
+                    html5QrcodeScanner.stop().then(() => {
+                        isScanning = false;
+                        // 切换到下一个摄像头
+                        currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+                        cameraSelect.selectedIndex = currentCameraIndex;
+                        updateStatus(`已切换到摄像头 ${currentCameraIndex + 1}`, false);
+
+                        // 重新开始扫描
+                        setTimeout(() => {
+                            scanButton.click();
+                        }, 500);
+                    });
+                } else {
+                    // 如果没有在扫描，直接切换
+                    currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+                    cameraSelect.selectedIndex = currentCameraIndex;
+                    updateStatus(`已切换到摄像头 ${currentCameraIndex + 1}`, false);
+                }
+            });
+
+            // 摄像头选择变化
+            cameraSelect.addEventListener('change', function () {
+                if (this.value) {
+                    const selectedIndex = this.selectedIndex;
+                    if (selectedIndex >= 0 && selectedIndex < cameras.length) {
+                        currentCameraIndex = selectedIndex;
+
+                        if (isScanning) {
+                            // 如果正在扫描，重启扫描
+                            stopButton.click();
+                            setTimeout(() => {
+                                scanButton.click();
+                            }, 500);
+                        }
+                    }
+                }
+            });
+
+            /**【ok】写入文本到剪贴板 \n换行，例如 `${txt1}\n\n行2\n行3`  */
+            // async function writeTextToClipboardA(txt) {
+            //     try {
+            //         await navigator.clipboard.writeText(txt);
+            //         //console.log('已复制到剪贴板');
+            //     } catch (err) {
+            //         console.error('操作剪贴板失败: ', err);
+            //         alert('复制剪贴板失败: ' + err);
+            //     }
+            // }
+
+            // // 【Fail】复制内容到剪贴板
+            // function copyToClipboard(text) {
+            //     const textarea = document.createElement('textarea');
+            //     textarea.value = text;
+            //     document.body.appendChild(textarea);
+            //     textarea.select();
+            //     document.execCommand('copy');
+            //     document.body.removeChild(textarea);
+            // }
+
+            //复制到剪贴板
+            async function copyToClipboardUniversal(text) {
+                // 优先使用现代API
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        return true;
+                    } catch (err) {
+                        console.warn('Clipboard API failed, trying fallback:', err);
+                    }
+                }
+
+                // 降级方案
+                return fallbackCopyToClipboard(text);
+            }
+
+            function fallbackCopyToClipboard(text) {
+                return new Promise((resolve, reject) => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.cssText = 'position:fixed;left:-9999px;opacity:0;';
+
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    textarea.setSelectionRange(0, 99999);
+
+                    try {
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        successful ? resolve(true) : reject(new Error('execCommand failed'));
+                    } catch (err) {
+                        document.body.removeChild(textarea);
+                        reject(err);
+                    }
+                });
+            }
+
+            // 扫描成功回调：必须 stop 并重置 isScanning，否则「开始扫描」会因 isScanning 一直为 true 而拒绝第二次
+            function onScanSuccess(decodedText, decodedResult) {
+                if (scanSuccessHandled) return;
+                scanSuccessHandled = true;
+
+                resultElement.textContent = decodedText;
+                updateStatus('扫描成功!', true);
+
+                html5QrcodeScanner.stop()
+                    .then(() => {
+                        isScanning = false;
+                        updateStatus('扫描成功，可再次点击「开始扫描」', false);
+                        return copyToClipboardUniversal(decodedText)
+                            .then(() => {
+                                console.log('已复制到剪贴板');
+                                alert(`${decodedText} \n\n已复制到剪贴板`);
+                            })
+                            .catch(err => {
+                                console.error('复制剪贴板失败: ', err);
+                                alert(`${decodedText}`);
+                            });
+                    })
+                    .catch(err => {
+                        console.error('停止扫描失败:', err);
+                        isScanning = false;
+                        scanSuccessHandled = false;
+                    });
+            }
+
+            // 扫描失败回调
+            function onScanFailure(error) {
+                // 失败信息通常不需要显示给用户
+                // console.warn(`扫描失败: ${error}`);
+            }
+
+            // 更新状态显示
+            function updateStatus(text, active) {
+                statusElement.textContent = text;
+                if (active) {
+                    statusContainer.classList.add('active');
+                } else {
+                    statusContainer.classList.remove('active');
+                }
+            }
+
+
+            // 初始化扫描器
+            initScanner();
+        });
+    </script>
+</body>
+
+</html>
