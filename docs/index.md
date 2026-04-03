@@ -15,7 +15,9 @@ hero:
       link: /api-examples
     - theme: alt
       text: json可视化
-      link: /json
+      link: https://ktcto.com/json.html
+      target: _blank
+      rel: noopener noreferrer
     - theme: alt
       text: 二维码工具
       link: /qr
