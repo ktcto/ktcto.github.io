@@ -8,7 +8,9 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
+      { text: 'Examples', link: '/markdown-examples' },
+      { text: 'json可视化', link: 'https://ktcto.com/json.html' },
+      { text: '二维码工具', link: '/qr' }
     ],
 
     sidebar: [
