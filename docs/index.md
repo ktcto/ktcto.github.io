@@ -21,6 +21,7 @@ hero:
     - theme: alt
       text: 二维码工具
       link: /qr
+      rel: noopener noreferrer
 
 features:
   - title: Feature 测试1
