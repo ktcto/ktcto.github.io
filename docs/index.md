@@ -13,6 +13,12 @@ hero:
     - theme: alt
       text: API Examples
       link: /api-examples
+    - theme: alt
+      text: json可视化
+      link: /json.htm
+    - theme: alt
+      text: 二维码工具
+      link: /qr.htm  
 
 features:
   - title: Feature 测试1
