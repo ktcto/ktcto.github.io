@@ -15,10 +15,10 @@ hero:
       link: /api-examples
     - theme: alt
       text: json可视化
-      link: /json.htm
+      link: /json
     - theme: alt
       text: 二维码工具
-      link: /qr.htm  
+      link: /qr
 
 features:
   - title: Feature 测试1
